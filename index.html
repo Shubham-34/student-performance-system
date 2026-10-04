@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Performance System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Student Performance System</h1>
+    <p>Enter marks once. Totals, percentage, grade, pass or fail, attendance check, averages and graphs update by themselves.</p>
+  </header>
+
+  <div class="banner" id="sampleBanner" hidden>
+    <span>These are sample students so you can see how everything works. Clear them to start with your own data.</span>
+    <button type="button" class="btn small" id="clearSample">Clear sample data</button>
+  </div>
+
+  <dl class="summary" id="summary" aria-label="Summary of all students"></dl>
+
+  <div class="layout">
+    <section class="panel entry" aria-labelledby="entryTitle">
+      <div class="panel-head">
+        <h2 id="entryTitle">Student entry</h2>
+        <span class="hint" id="modeHint">New student</span>
+      </div>
+      <form id="entryForm" novalidate>
+        <div class="row">
+          <div class="field"><label for="f-id">Student ID</label><input type="text" id="f-id" autocomplete="off" placeholder="e.g. 108"></div>
+          <div class="field"><label for="f-class">Class</label><input type="text" id="f-class" autocomplete="off" placeholder="e.g. BCA-3"></div>
+          <div class="field full"><label for="f-name">Name</label><input type="text" id="f-name" autocomplete="off" placeholder="Full name"></div>
+          <div class="field full"><div class="mark-list" id="markFields"></div></div>
+        </div>
+
+        <div class="preview" aria-live="polite">
+          <h3>Result preview</h3>
+          <dl id="preview"></dl>
+        </div>
+
+        <p class="msg" id="formMsg" role="status" aria-live="polite"></p>
+
+        <div class="btns">
+          <button type="submit" class="btn primary" id="saveBtn">Add student</button>
+          <button type="button" class="btn" id="clearBtn">Clear form</button>
+          <button type="button" class="btn danger" id="deleteBtn" hidden>Delete student</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" aria-labelledby="tableTitle">
+      <div class="panel-head">
+        <h2 id="tableTitle">Students</h2>
+        <span class="count" id="count"></span>
+      </div>
+
+      <div class="filters">
+        <div class="field search"><label for="q">Search by ID or name</label><input type="text" id="q" autocomplete="off" placeholder="Type to search"></div>
+        <div class="field"><label for="fClass">Class</label><select id="fClass"></select></div>
+        <div class="field"><label for="fResult">Result</label>
+          <select id="fResult"><option value="">All</option><option>Pass</option><option>Fail</option><option>Incomplete</option></select></div>
+        <div class="field"><label for="fGrade">Grade</label><select id="fGrade"></select></div>
+        <label class="check"><input type="checkbox" id="fLow"> Low attendance only</label>
+        <button type="button" class="btn" id="resetFilters">Reset filters</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr id="thead"></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <p class="empty" id="emptyMsg" hidden></p>
+      <p class="hint" id="subjectKey" style="margin-top:10px"></p>
+
+      <div class="tools">
+        <button type="button" class="btn small" id="loadSample">Load sample data</button>
+        <button type="button" class="btn small" id="importBtn">Import CSV</button>
+        <input type="file" id="importFile" accept=".csv,text/csv" hidden>
+        <button type="button" class="btn small" id="copyCsv">Copy CSV</button>
+        <button type="button" class="btn small" id="downloadCsv">Download CSV</button>
+        <button type="button" class="btn small danger" id="clearAll">Delete all students</button>
+      </div>
+      <p class="msg" id="toolMsg" role="status" aria-live="polite"></p>
+      <textarea class="csvbox" id="csvBox" readonly hidden aria-label="CSV text"></textarea>
+    </section>
+  </div>
+
+  <section aria-labelledby="chartsTitle">
+    <div class="panel-head"><h2 id="chartsTitle">Graphs</h2><span class="hint">Based on students with complete marks</span></div>
+    <div class="charts">
+      <div class="panel chart-card"><h3>Subject-wise average marks</h3><p class="hint">Average of each subject across students</p><div id="chartSubjects"></div></div>
+      <div class="panel chart-card"><h3>Pass vs fail</h3><p class="hint">Share of students who passed</p><div id="chartPass"></div></div>
+      <div class="panel chart-card"><h3>Grade distribution</h3><p class="hint">Number of students in each grade</p><div id="chartGrades"></div></div>
+      <div class="panel chart-card"><h3>Top students</h3><p class="hint">Highest percentage, up to 10</p><div id="chartTop"></div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <details class="rules" id="rules">
+      <summary>Rules and grading</summary>
+      <div class="rule-grid">
+        <div class="field"><label for="r-maxSub">Max marks per subject</label><input type="number" id="r-maxSub" min="1" step="any"></div>
+        <div class="field"><label for="r-maxInt">Max internal marks</label><input type="number" id="r-maxInt" min="1" step="any"></div>
+        <div class="field"><label for="r-subPass">Pass marks per subject</label><input type="number" id="r-subPass" min="0" step="any"></div>
+        <div class="field"><label for="r-overPass">Pass percentage overall</label><input type="number" id="r-overPass" min="0" max="100" step="any"></div>
+        <div class="field"><label for="r-minAtt">Minimum attendance %</label><input type="number" id="r-minAtt" min="0" max="100" step="any"></div>
+      </div>
+      <p class="hint">Total = all five subjects + Internal. Percentage = Total divided by the maximum total. A student passes when every subject (Internal not included) is at or above the pass marks and the overall percentage is at or above the pass percentage. A failed student always gets grade F.</p>
+      <p class="grades" aria-label="Grade bands"><span>A+ 90 and above</span><span>A 80 to 89</span><span>B 70 to 79</span><span>C 60 to 69</span><span>D 50 to 59</span><span>E 40 to 49</span><span>F below 40</span></p>
+      <p class="msg info" id="ruleMsg"></p>
+      <div class="btns"><button type="button" class="btn small" id="resetRules">Reset rules to default</button></div>
+    </details>
+  </section>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
